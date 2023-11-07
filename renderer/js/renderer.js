@@ -59,6 +59,11 @@ function sendImageToMain(e) {
   });
 }
 
+// catch image done event
+ipcRenderer.on('image:done', () => {
+  alertSuccess('Image resized');
+});
+
 function alertError(message) {
   Toastify.toast({
     text: message,

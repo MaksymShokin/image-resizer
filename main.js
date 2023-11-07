@@ -1,13 +1,18 @@
 const path = require('path');
-const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+const os = require('os');
+const fs = require('fs');
+const resizeImg = require('resize-img');
+
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
 
 const isMac = process.platform === 'darwin';
 
-// does not seem to work
 const isDev = process.env.NODE_ENV !== 'production';
 
+let mainWindow;
+
 const createMainWindow = () => {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     title: 'Image resizer',
     width: isDev ? 1000 : 500,
     height: 600,
@@ -86,6 +91,11 @@ app.whenReady().then(() => {
   const mainMenu = Menu.buildFromTemplate(menu);
   Menu.setApplicationMenu(mainMenu);
 
+  // remove main window memory on close
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createMainWindow();
@@ -98,3 +108,34 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+
+// respond to ipcRenderer resize
+ipcMain.on('image:resize', (event, options) => {
+  options.dest = path.join(os.homedir(), 'imageresizer');
+  resizeImage(options);
+});
+
+async function resizeImage({ height, width, dest, imagePath }) {
+  try {
+    const newPath = await resizeImg(fs.readFileSync(imagePath), {
+      width: Number(width),
+      height: Number(height)
+    });
+    const fileName = path.basename(imagePath);
+
+    // check if destination folder exists
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest);
+    }
+
+    fs.writeFileSync(path.join(dest, fileName), newPath);
+
+    // send message to renderer
+    mainWindow.webContents.send('image:done');
+
+    // open des folder
+    shell.openPath(dest);
+  } catch (error) {
+    console.log(error);
+  }
+}
