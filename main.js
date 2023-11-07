@@ -1,5 +1,5 @@
 const path = require('path');
-const { app, BrowserWindow, Menu } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 
 const isMac = process.platform === 'darwin';
 

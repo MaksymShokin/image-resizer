@@ -5,6 +5,7 @@ const outputPath = document.querySelector('#output-path');
 
 const widthInput = document.querySelector('#width');
 const heightInput = document.querySelector('#height');
+const img = document.querySelector('#img');
 
 function loadImage(e) {
   const file = e.target.files[0];
@@ -30,6 +31,32 @@ function loadImage(e) {
 function isFileImage(file) {
   const acceptedImageTypes = ['image/gif', 'image/jpeg', 'image/png'];
   return file && acceptedImageTypes.includes(file['type']);
+}
+
+function sendImageToMain(e) {
+  e.preventDefault();
+
+  const width = widthInput.value;
+  const height = heightInput.value;
+
+  if (!img.files[0]) {
+    alertError('Please provide image');
+    return;
+  }
+
+  const imagePath = img.files[0].path;
+
+  if (!width || !height) {
+    alertError('Please provide dimensions');
+    return;
+  }
+
+  // send to main using IPC renderer
+  ipcRenderer.send('image:resize', {
+    imagePath,
+    width,
+    height
+  });
 }
 
 function alertError(message) {
@@ -59,3 +86,4 @@ function alertSuccess(message) {
 }
 
 document.querySelector('#img').addEventListener('change', loadImage);
+form.addEventListener('submit', sendImageToMain);
