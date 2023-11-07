@@ -1,6 +1,7 @@
 // Some JavaScript to load the image and show the form. There is no actual backend functionality. This is just the UI
 
 const form = document.querySelector('#img-form');
+const outputPath = document.querySelector('#output-path');
 
 const widthInput = document.querySelector('#width');
 const heightInput = document.querySelector('#height');
@@ -23,6 +24,7 @@ function loadImage(e) {
 
   form.style.display = 'block';
   document.querySelector('#filename').innerHTML = file.name;
+  outputPath.innerHTML = path.join(os.homedir(), 'imageresizer');
 }
 
 function isFileImage(file) {
